@@ -7,6 +7,36 @@ using System.Threading;
 
 namespace ServerCore
 {
+    // [size(2byte)][packetId(2byte)][...][size(2byte)][packetId(2byte)][...]
+    public abstract class PacketSession : Session
+    {
+        public static readonly int HeaderSize = 2;  // const랑 별차이 없음 차라리 const쓸 수 있으면  const쓰는게 readonly보다 나을듯
+        public sealed override int OnRecv(ArraySegment<byte> buffer)
+        {
+            int processLen = 0;
+
+            while (true)
+            {
+                // 최소한 헤더는 파싱할 수 있게 확인
+                if (buffer.Count <= HeaderSize)  //[size(2byte)][packetId(2byte)][...] 이기 때문임
+                    break;
+
+                // 패킷이 완전한 상태로 도착했는지 확인
+                ushort dataSize = BitConverter.ToUInt16(buffer.Array, buffer.Offset);
+                if (buffer.Count < dataSize) // 완전체가 아닌 부분만 온 경우
+                    break;
+
+                // 여기까지 온거면 패킷이 조립 가능한 상태임
+                OnRecvPacket(new ArraySegment<byte>(buffer.Array, buffer.Offset, dataSize));
+
+                processLen += dataSize;
+                buffer = new ArraySegment<byte>(buffer.Array, buffer.Offset + dataSize, buffer.Count - dataSize); // 갱신 시켜줌 처리한 데이터만큼 offset 옮겨주고 전체크기는 처리한 데이터 크기만큼 줄어드니까 - dataSize 해줌
+            }
+
+            return processLen;
+        }
+        public abstract void OnRecvPacket(ArraySegment<byte> buffer);
+    }
     public abstract class Session
     {
         Socket _socket;
@@ -15,7 +45,7 @@ namespace ServerCore
         RecvBuffer _recvBuffer = new RecvBuffer(1024);
 
         object _lock = new object();
-        Queue<byte[]> _sendQueue = new Queue<byte[]>();
+        Queue<ArraySegment<byte>> _sendQueue = new Queue<ArraySegment<byte>>();
         List<ArraySegment<byte>> _pendingList = new List<ArraySegment<byte>>();
         SocketAsyncEventArgs _sendArgs = new SocketAsyncEventArgs();
         SocketAsyncEventArgs _recvArgs = new SocketAsyncEventArgs();
@@ -32,7 +62,7 @@ namespace ServerCore
 
             RegisterRecv();
         }
-        public void Send(byte[] sendBuff)
+        public void Send(ArraySegment<byte> sendBuff)
         {
             lock (_lock)
             {
@@ -55,8 +85,8 @@ namespace ServerCore
         {
             while (_sendQueue.Count > 0)
             {
-                byte[] buff = _sendQueue.Dequeue();
-                _pendingList.Add(new ArraySegment<byte>(buff, 0, buff.Length));
+                ArraySegment<byte> buff = _sendQueue.Dequeue();
+                _pendingList.Add(buff);
             }
             _sendArgs.BufferList = _pendingList;
 
