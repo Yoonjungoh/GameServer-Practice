@@ -23,6 +23,8 @@ namespace DummyClient
         public long playerId;
         public string name;
 
+        public List<int> skills = new List<int>();
+
         public PlayerInfoReq()
         {
             this.packetId = (ushort)PacketID.PlayerInfoReq;
@@ -67,12 +69,12 @@ namespace DummyClient
             //Array.Copy(Encoding.Unicode.GetBytes(this.name), 0, segment.Array, count, nameLen);
             //count += nameLen;
 
-            ushort nameLen = (ushort)Encoding.Unicode.GetBytes(this.name, 0, this.name.Length, segment.Array, segment.Offset + count + sizeof(ushort));
-            success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), nameLen);
-            count += sizeof(ushort);
-            count += nameLen;
+            //ushort nameLen = (ushort)Encoding.Unicode.GetBytes(this.name, 0, this.name.Length, segment.Array, segment.Offset + count + sizeof(ushort));
+            //success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), nameLen);
+            //count += sizeof(ushort);
+            //count += nameLen;
 
-            success &= BitConverter.TryWriteBytes(s, count);
+            //success &= BitConverter.TryWriteBytes(s, count);
 
             if (success == false)
                 return null;
