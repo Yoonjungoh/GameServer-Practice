@@ -9,6 +9,7 @@ using System.Net;
 
 namespace Server
 {
+
     public abstract class Packet
     {
         public ushort size;
@@ -22,6 +23,37 @@ namespace Server
     {
         public long playerId;
         public string name;
+
+        public struct SkillInfo
+        {
+            public int id;
+            public short level;
+            public float duration;
+
+            public bool Write(Span<byte> s, ref ushort count)
+            {
+                bool success = true;
+                success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), id);
+                count += sizeof(int);
+                success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), level);
+                count += sizeof(short);
+                success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), duration);
+                count += sizeof(float);
+
+                return true;
+            }
+            public void Read(ReadOnlySpan<byte> s, ref ushort count)
+            {
+                id = BitConverter.ToInt32(s.Slice(count, s.Length - count)); // 클라에서 size 유효 범위 잘못 보내도 인지 가능함 spanread써서
+                count += sizeof(int);
+                level = BitConverter.ToInt16(s.Slice(count, s.Length - count));
+                count += sizeof(short);
+                duration = BitConverter.ToSingle(s.Slice(count, s.Length - count)); // ToSingle이 floating 말함
+                count += sizeof(float);
+            }
+        }
+
+        public List<SkillInfo> skills = new List<SkillInfo>();
 
         public PlayerInfoReq()
         {
@@ -42,6 +74,18 @@ namespace Server
             ushort nameLen = BitConverter.ToUInt16(s.Slice(count, s.Length - count));
             count += sizeof(ushort);
             this.name = Encoding.Unicode.GetString(s.Slice(count, nameLen));
+            count += nameLen;
+
+            // skill list 처리 부분
+            skills.Clear(); // 혹시 남아있을 잔여물 제거
+            ushort skillLen = BitConverter.ToUInt16(s.Slice(count, s.Length - count));
+            count += sizeof(ushort);
+            for (int i = 0; i < skillLen; i++)
+            {
+                SkillInfo skill = new SkillInfo();
+                skill.Read(s, ref count);
+                skills.Add(skill);
+            }
         }
 
         public override ArraySegment<byte> Write()
@@ -61,11 +105,17 @@ namespace Server
             count += sizeof(long);
 
             // string 처리 부분
-            ushort nameLen = (ushort)Encoding.Unicode.GetByteCount(this.name);
+            ushort nameLen = (ushort)Encoding.Unicode.GetBytes(this.name, 0, this.name.Length, segment.Array, segment.Offset + count + sizeof(ushort));
             success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), nameLen);
             count += sizeof(ushort);
-            Array.Copy(Encoding.Unicode.GetBytes(this.name), 0, segment.Array, count, nameLen);
             count += nameLen;
+
+            // skill list처리 부분
+            success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)skills.Count);
+            count += sizeof(ushort);
+            foreach (SkillInfo skill in skills)
+                success &= skill.Write(s, ref count);
+
 
             success &= BitConverter.TryWriteBytes(s, count);
 
@@ -116,6 +166,11 @@ namespace Server
                         PlayerInfoReq p = new PlayerInfoReq();
                         p.Read(buffer);
                         Console.WriteLine($"PlayerInfoReq:{p.playerId} {p.name}");
+
+                        foreach(PlayerInfoReq.SkillInfo skill in p.skills)
+                        {
+                            Console.WriteLine($"Skill({skill.id})({skill.level})({skill.duration})");
+                        }
                     }
                     break;
             }
