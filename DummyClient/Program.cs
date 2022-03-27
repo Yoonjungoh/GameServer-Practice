@@ -7,31 +7,34 @@ using System.Threading;
 
 namespace DummyClient
 {
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            string host = Dns.GetHostName();
-            IPHostEntry ipHost = Dns.GetHostEntry(host);
-            IPAddress ipAddr = ipHost.AddressList[0];
-            IPEndPoint endPoint = new IPEndPoint(ipAddr, 7777); //식당주소, 문번호(포트번호)
+	
 
-            Connector connector = new Connector();
+	class Program
+	{
+		static void Main(string[] args)
+		{
+			// DNS (Domain Name System)
+			string host = Dns.GetHostName();
+			IPHostEntry ipHost = Dns.GetHostEntry(host);
+			IPAddress ipAddr = ipHost.AddressList[0];
+			IPEndPoint endPoint = new IPEndPoint(ipAddr, 7777);
 
-            connector.Connect(endPoint, () => { return new ServerSession(); });
+			Connector connector = new Connector();
 
-            while (true)
-            {
-                try
-                {
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.ToString());
-                }
+			connector.Connect(endPoint, () => { return new ServerSession(); });
 
-                Thread.Sleep(100);
-            }
-        }
-    }
+			while (true)
+			{
+				try
+				{
+				}
+				catch (Exception e)
+				{
+					Console.WriteLine(e.ToString());
+				}
+
+				Thread.Sleep(100);
+			}
+		}
+	}
 }
