@@ -1,20 +1,18 @@
-﻿using ServerCore;
+﻿using DummyClient;
+using ServerCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 class PacketHandler
 {
-	public static void C_ChatHandler(PacketSession session, IPacket packet)
+	public static void S_ChatHandler(PacketSession session, IPacket packet)
 	{
-		//C_Chat chatPacket = packet as C_Chat;
-		//ClientSession clientSession = session as clientSession
+		S_Chat chatPacket = packet as S_Chat;
+		ServerSession serverSession = session as ServerSession;
 
-  //      Console.WriteLine(($"PlayerInfoReq: {chatPacket.playerId} {chatPacket.name}");
+		//if(chatPacket.playerId == 1)
+            Console.WriteLine(chatPacket.chat);
 
-		//foreach(C_PlayerInfoReq.Skill skill in chatPacket.skills)
-  //      {
-  //          Console.WriteLine($"Skill({skill.id}) ({skill.level}) ({skill.duration})");
-  //      }
 	}
 }
