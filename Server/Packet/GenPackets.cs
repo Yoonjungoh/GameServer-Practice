@@ -18,6 +18,7 @@ interface IPacket
 	ArraySegment<byte> Write();
 }
 
+
 class C_PlayerInfoReq : IPacket
 {
 	public sbyte testByte;
