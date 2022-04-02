@@ -22,7 +22,7 @@ namespace Server
             packet.chat = $"{chat} I am {packet.playerId}";
             ArraySegment<byte> segment = packet.Write();
 
-            foreach(ClientSession s in _sessions)
+            foreach(ClientSession s in _sessions)   // 패킷을 요청이 올때마다 보내는게 아니라 뭉쳐서 보내는게 해결책인듯!!(N^2에서 N으로 줄일 수 있음)
                 s.Send(segment);
         }
         public void Enter(ClientSession session)
