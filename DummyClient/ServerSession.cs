@@ -10,7 +10,7 @@ namespace DummyClient
 	{
 		public override void OnConnected(EndPoint endPoint)
 		{
-			Console.WriteLine($"OnConnected : {endPoint}");
+			Console.WriteLine($"OnConnected : {endPoint}");			
 		}
 
 		public override void OnDisconnected(EndPoint endPoint)
@@ -25,7 +25,7 @@ namespace DummyClient
 
 		public override void OnSend(int numOfBytes)
 		{
-			//Console.WriteLine($"Transferred bytes: {numOfBytes}"); // 너무 많이 나와
+			//Console.WriteLine($"Transferred bytes: {numOfBytes}");
 		}
 	}
 }

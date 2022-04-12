@@ -9,8 +9,6 @@ using ServerCore;
 
 namespace Server
 {
-	
-
 	class Program
 	{
 		static Listener _listener = new Listener();
@@ -21,6 +19,7 @@ namespace Server
 			Room.Push(() => Room.Flush());
 			JobTimer.Instance.Push(FlushRoom, 250);
 		}
+
 		static void Main(string[] args)
 		{
 			// DNS (Domain Name System)
@@ -34,7 +33,6 @@ namespace Server
 
 			//FlushRoom();
 			JobTimer.Instance.Push(FlushRoom);
-
 
 			while (true)
 			{
